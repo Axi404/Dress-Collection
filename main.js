@@ -239,7 +239,6 @@ const imageUrls = [
     "https://pic.axi404.top/48759bdc49189f95f1f79add6776eff.54xqgnplfp.webp",
     "https://pic.axi404.top/01.2h88iwykmw.webp",
     "https://pic.axi404.top/e15bf19e4bc75c97d586622e701563a.5q7e2yrsfq.webp",
-    // ... add more image URLs as needed
 ];
 
 const photobox = new PhotoBox(imageUrls); 
