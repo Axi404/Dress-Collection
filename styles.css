@@ -22,7 +22,7 @@ body {
     align-items: center;
     width: 100%;
     height: 100vh;
-    background-color: #171717;
+    background-color: #ffffff;
     overflow: hidden;
 }
 
@@ -36,15 +36,15 @@ body {
 .photos_line {
     display: flex;
     font-size: 1px;
-    margin-bottom: 48em;
+    margin-bottom: 24em;
     flex-shrink: 0;
 }
 
 .photos_line_photo {
     font-size: 1px;
-    width: 234em;
+    width: 216em;
     height: 400em;
-    margin-right: 36em;
+    margin-right: 20em;
     border-radius: 15em;
     background-color: #17f700;
     overflow: hidden;
