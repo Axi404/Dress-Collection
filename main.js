@@ -1,5 +1,7 @@
-class PhotoBox {
-    constructor(imageUrls, imagesPerRow = 8) {
+class PhotoBox
+{
+    constructor(imageUrls, imagesPerRow = 8)
+    {
         this.imageUrls = imageUrls;
         this.imagesPerRow = imagesPerRow;
         this.container = document.querySelector(".photos");
@@ -18,19 +20,23 @@ class PhotoBox {
         this.createPhotoGrid();
     }
 
-    createPhotoGrid() {
+    createPhotoGrid()
+    {
         this.container.innerHTML = '';
         const rows = Math.ceil(this.imageUrls.length / this.imagesPerRow);
 
         const loadPromises = [];
 
-        for (let i = 0; i < rows; i++) {
+        for (let i = 0; i < rows; i++)
+        {
             const row = document.createElement('div');
             row.className = 'photos_line';
 
-            for (let j = 0; j < this.imagesPerRow; j++) {
+            for (let j = 0; j < this.imagesPerRow; j++)
+            {
                 const index = i * this.imagesPerRow + j;
-                if (index >= this.imageUrls.length) break;
+                if (index >= this.imageUrls.length)
+                    break;
 
                 const photoDiv = document.createElement('div');
                 photoDiv.className = 'photos_line_photo';
@@ -59,12 +65,14 @@ class PhotoBox {
         });
     }
 
-    init() {
+    init()
+    {
         this.resize();
         this.bindEvents();
     }
 
-    bindEvents() {
+    bindEvents()
+    {
         window.addEventListener("resize", () => this.resize());
 
         this.container.addEventListener("mousedown", (event) => {
@@ -87,21 +95,47 @@ class PhotoBox {
 
         this.container.addEventListener("click", (event) => {
             const photoDiv = event.target.closest('.photos_line_photo');
-            if (photoDiv) {
+            if (photoDiv)
+            {
                 const img = photoDiv.querySelector('img');
                 this.openModal(img.src);
             }
         });
+
+        this.container.addEventListener("touchstart", (event) => {
+            this.if_movable = true;
+            const touch = event.touches[0];
+            this.mouse_x = touch.clientX;
+            this.mouse_y = touch.clientY;
+        }, {passive : false});
+
+        this.container.addEventListener("touchend", () => {
+            this.if_movable = false;
+        }, {passive : false});
+
+        this.container.addEventListener("touchcancel", () => {
+            this.if_movable = false;
+        }, {passive : false});
+
+        this.container.addEventListener("touchmove", (event) => {
+            if (this.if_movable)
+            {
+                const touch = event.touches[0];
+                this.move(touch.clientX, touch.clientY);
+            }
+        }, {passive : false});
     }
 
-    resize() {
-        const imgs = [...document.querySelectorAll(".photos_line_photo")];
+    resize()
+    {
+        const imgs = [...document.querySelectorAll(".photos_line_photo") ];
         this.updateDimensions(imgs);
         this.resetImagesPosition(imgs);
         this.updateImageData(imgs);
     }
 
-    updateDimensions(imgs) {
+    updateDimensions(imgs)
+    {
         this.container_width = this.container.offsetWidth;
         this.container_height = this.container.offsetHeight;
         this.photo_width = imgs[0].offsetWidth;
@@ -110,27 +144,31 @@ class PhotoBox {
         this.container.style.transform = `scale(${this.scale_nums})`;
     }
 
-    resetImagesPosition(imgs) {
+    resetImagesPosition(imgs)
+    {
         gsap.to(imgs, {
-            transform: `translate(0,0)`,
-            duration: 0,
-            ease: 'power4.out'
+            transform : `translate(0,0)`,
+            duration : 0,
+            ease : 'power4.out'
         });
     }
 
-    updateImageData(imgs) {
+    updateImageData(imgs)
+    {
         this.img_data = imgs.map(img => ({
-            node: img,
-            x: img.offsetLeft,
-            y: img.offsetTop,
-            mov_x: 0,
-            mov_y: 0,
-            ani: 0
-        }));
+                                     node : img,
+                                     x : img.offsetLeft,
+                                     y : img.offsetTop,
+                                     mov_x : 0,
+                                     mov_y : 0,
+                                     ani : 0
+                                 }));
     }
 
-    move(x, y) {
-        if (!this.if_movable) return;
+    move(x, y)
+    {
+        if (!this.if_movable)
+            return;
 
         const distance_x = (x - this.mouse_x) / this.scale_nums;
         const distance_y = (y - this.mouse_y) / this.scale_nums;
@@ -141,42 +179,49 @@ class PhotoBox {
         this.mouse_y = y;
     }
 
-    updateImagePosition(img, distance_x, distance_y) {
+    updateImagePosition(img, distance_x, distance_y)
+    {
         let duration = 1;
 
         img.mov_x += distance_x;
         img.mov_y += distance_y;
 
         // Handle horizontal wrapping
-        if (img.x + img.mov_x > this.container_width) {
+        if (img.x + img.mov_x > this.container_width)
+        {
             img.mov_x -= this.container_width;
             duration = 0;
         }
-        if (img.x + img.mov_x < -this.photo_width) {
+        if (img.x + img.mov_x < -this.photo_width)
+        {
             img.mov_x += this.container_width;
             duration = 0;
         }
 
         // Handle vertical wrapping
-        if (img.y + img.mov_y > this.container_height) {
+        if (img.y + img.mov_y > this.container_height)
+        {
             img.mov_y -= this.container_height;
             duration = 0;
         }
-        if (img.y + img.mov_y < -this.photo_height) {
+        if (img.y + img.mov_y < -this.photo_height)
+        {
             img.mov_y += this.container_height;
             duration = 0;
         }
 
-        if (img.ani) img.ani.kill();
+        if (img.ani)
+            img.ani.kill();
 
         img.ani = gsap.to(img.node, {
-            transform: `translate(${img.mov_x}px,${img.mov_y}px)`,
-            duration: duration,
-            ease: 'power4.out'
+            transform : `translate(${img.mov_x}px,${img.mov_y}px)`,
+            duration : duration,
+            ease : 'power4.out'
         });
     }
 
-    createModal() {
+    createModal()
+    {
         // Create modal container
         this.modal = document.createElement('div');
         this.modal.className = 'photo-modal';
@@ -198,17 +243,20 @@ class PhotoBox {
         // Add close events
         this.closeBtn.onclick = () => this.closeModal();
         this.modal.onclick = (e) => {
-            if (e.target === this.modal) this.closeModal();
+            if (e.target === this.modal)
+                this.closeModal();
         };
     }
 
-    openModal(imgSrc) {
+    openModal(imgSrc)
+    {
         this.modal.style.display = 'flex';
         this.modalImg.src = imgSrc;
         document.body.style.overflow = 'hidden';
     }
 
-    closeModal() {
+    closeModal()
+    {
         this.modal.style.display = 'none';
         document.body.style.overflow = '';
     }
@@ -241,4 +289,4 @@ const imageUrls = [
     "https://pic.axi404.top/e15bf19e4bc75c97d586622e701563a.5q7e2yrsfq.webp",
 ];
 
-const photobox = new PhotoBox(imageUrls); 
+const photobox = new PhotoBox(imageUrls);
