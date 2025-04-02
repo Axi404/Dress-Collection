@@ -1,25 +1,234 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>猫娘之家</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="styles.css">
-    <script src="gsap.js"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L8K4LDHNZH"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-L8K4LDHNZH');
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>猫娘之家</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+    #canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+    }
+    .tile {
+      position: absolute;
+      width: 240px;
+      height: 360px;
+      border-radius: 12px;
+      overflow: hidden;
+      will-change: transform;
+      /* transition: transform 0.3s ease; */
+    }
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      user-select: none;
+      transition: transform 0.8s ease;
+    }
+    .tile:hover img {
+      transform: scale(1.2);
+    }
+
+    /* 弹窗样式 */
+    .modal {
+      position: fixed;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10;
+    }
+    .modal img {
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+    .modal.show {
+      display: flex;
+    }
+  </style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L8K4LDHNZH"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-L8K4LDHNZH');
+  </script>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
-
 <body>
-    <div class="photos"></div>
-    <script src="main.js"></script>
-</body>
+  <div id="canvas"></div>
+  <div class="modal" id="modal">
+    <img id="modal-img" src="">
+  </div>
 
+  <script>
+    const imageUrls = [
+      "https://pic.axi404.top/1.9rjhqwq0nd.webp",
+      "https://pic.axi404.top/Lolita.67xjfb7fhn.webp",
+      "https://pic.axi404.top/cover.5fkimf6u7r.webp",
+      "https://pic.axi404.top/09.54xot9rm1v.webp",
+      "https://pic.axi404.top/1.13lr4lb3hn.webp",
+      "https://pic.axi404.top/08.7p3j5wrknt.webp",
+      "https://pic.axi404.top/07.8ad6s7m0y0.webp",
+      "https://pic.axi404.top/3.73tx9bkp6r.webp",
+      "https://pic.axi404.top/2.3yejhm2kef.webp",
+      "https://pic.axi404.top/cf9366221eead347d2302847efe058e.1hs6t514b2.webp",
+      "https://pic.axi404.top/06.6pnfsqoth3.webp",
+      "https://pic.axi404.top/04.1seyywb1ni.webp",
+      "https://pic.axi404.top/d3c01538891f9d476028edbac9e5e88.2yybuvxmgu.webp",
+      "https://pic.axi404.top/4.9nzrlykntj.webp",
+      "https://pic.axi404.top/05.6ik7xb2o16.webp",
+      "https://pic.axi404.top/03.45m1pkrgu.webp",
+      "https://pic.axi404.top/2.67xftvb0q6.webp",
+      "https://pic.axi404.top/02.5j44k4zwub.webp",
+      "https://pic.axi404.top/d9d522b3e111531125cfe492d8d0d31.2obi1qe8fn.webp",
+      "https://pic.axi404.top/5.73tx9bkp60.webp",
+      "https://pic.axi404.top/48759bdc49189f95f1f79add6776eff.54xqgnplfp.webp",
+      "https://pic.axi404.top/01.2h88iwykmw.webp",
+      "https://pic.axi404.top/e15bf19e4bc75c97d586622e701563a.5q7e2yrsfq.webp"
+    ];
+
+    const tileW = 240 + 20;
+    const tileH = 360 + 20;
+    const gridSizeH = 5; // 10x10 图块
+    const gridSizeW = 12; // 10x10 图块
+    const canvas = document.getElementById("canvas");
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modal-img");
+
+    let offsetX = 0;
+    let offsetY = 0;
+    let lastX = 0, lastY = 0;
+    let isDragging = false;
+    let velocity = { x: 0, y: 0 };
+    let tiles = [];
+
+    // 初始化 tile
+    for (let row = 0; row < gridSizeH; row++) {
+      for (let col = 0; col < gridSizeW; col++) {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.dataset.gridX = col;
+        tile.dataset.gridY = row;
+        const img = document.createElement("img");
+        img.src = imageUrls[(row * gridSizeW + col) % imageUrls.length];
+        tile.appendChild(img);
+        tile.addEventListener("click", (e) => {
+          modal.classList.add("show");
+          modalImg.src = img.src;
+          e.stopPropagation();
+        });
+        canvas.appendChild(tile);
+        tiles.push(tile);
+      }
+    }
+
+    modal.addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    function updateTiles() {
+      const cx = canvas.clientWidth / 2;
+      const cy = canvas.clientHeight / 2;
+      for (const tile of tiles) {
+        let gx = parseInt(tile.dataset.gridX);
+        let gy = parseInt(tile.dataset.gridY);
+        let x = gx * tileW - offsetX % (gridSizeW * tileW);
+        let y = gy * tileH - offsetY % (gridSizeH * tileH);
+
+        if (x < -tileW) x += gridSizeW * tileW;
+        if (x > canvas.clientWidth) x -= gridSizeW * tileW;
+        if (y < -tileH) y += gridSizeH * tileH;
+        if (y > canvas.clientHeight) y -= gridSizeH * tileH;
+
+        tile.style.transform = `translate(${x}px, ${y}px)`;
+      }
+    }
+
+    function animate() {
+      if (!isDragging) {
+        offsetX += velocity.x;
+        offsetY += velocity.y;
+
+        velocity.x *= 0.95;
+        velocity.y *= 0.95;
+
+        if (Math.abs(velocity.x) < 0.1) velocity.x = 0;
+        if (Math.abs(velocity.y) < 0.1) velocity.y = 0;
+      }
+      updateTiles();
+      requestAnimationFrame(animate);
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.style.cursor = "grabbing";
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        offsetX -= dx;
+        offsetY -= dy;
+        velocity.x = -dx * 0.35;
+        velocity.y = -dy * 0.35;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      isDragging = true;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    });
+
+    canvas.addEventListener("touchend", () => {
+      isDragging = false;
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (isDragging) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - lastX;
+        const dy = touch.clientY - lastY;
+        offsetX -= dx;
+        offsetY -= dy;
+        velocity.x = -dx * 0.35;
+        velocity.y = -dy * 0.35;
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+      }
+    }, { passive: false });
+
+    animate();
+  </script>
+</body>
 </html>
